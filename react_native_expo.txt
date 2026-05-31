@@ -1,0 +1,33 @@
+React Native, Expo
+
+Arquitectura movil, sistema de diseño, navegación, FlashList, Zustand y persistencia local.
+
+El desarrollo moderno se construye sobre React Native con Expo como framework. En esta fase crearás NoteFlow
+desde cero: una app de productividad con tres tipos de contenido. El objetivo es aprender la arquitectura 
+React Native, configuraras un sistema de diseño profesional, implementarás navegación con Expo Router,
+renderizaras listas de alto rendimiento con FlashList y gestionarás el estado global con Zustand.
+
+Antes de empezar con el codigo crea el archivo docs/idea.md y documenta:
+
+1-. Que problema resuelve NoteFlow.
+2.- Quien es el usuario objetivo y como usaria la app en su día a día.
+3.- Lista de funcionalidades principales parqa esta primera versión.
+4.- Lista de funcionalidades opcionales que podrán añadirse más adelante.
+5.- Crea el repositorio de github y haz el primer commit con la estructura inicial del proyecto.
+
+Fundamentos de React Native
+
+En REact Native, cuando usas un componente como <View>, no se renderiza HTML en un WebView. React Native habla
+con el sistema operativo para crear vistas nativas reales, lo que le da el aspecto y rendimientode una app nativa.
+
+La arquitectura tiene dos hilos que deben comunicarse: el hilo de Javascript donde corre tu código React y la lógica de 
+negocio, y el hilo de UI nativo donde se renderizan los componentes del sistema operativo. Cuando el JS thread se bloquea,
+la interfaz se congela. Entender esto es la basse para escribir apps con rendimineto real.
+
+Expo Go us Develovment Build
+
+Expo Go es el entorno de desarrollo rápido: escaneas un QR y tu ap corre sin compilar nada. PEro para módulos nativos 
+personalizados (cámara, notificaciones push, biometria) necesitas un Develoment Build que es un binario propio
+genrado con EAS Build. En proyectos reales siempre se usa Develoment Build.
+
+Setup del proyecto: para crear la app
