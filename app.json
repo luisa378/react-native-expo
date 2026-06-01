@@ -16,6 +16,10 @@
       "supportsTablet": true
     },
     "android": {},
+    "web": {
+      "bundler": "metro",
+      "output": "static"
+    },
     "plugins": [
       "expo-router"
     ],
