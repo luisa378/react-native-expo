@@ -26,7 +26,7 @@ la interfaz se congela. Entender esto es la basse para escribir apps con rendimi
 
 Expo Go us Develovment Build
 
-Expo Go es el entorno de desarrollo rápido: escaneas un QR y tu ap corre sin compilar nada. PEro para módulos nativos 
+Expo Go es el entorno de desarrollo rápido: escaneas un QR y tu app corre sin compilar nada. Pero para módulos nativos 
 personalizados (cámara, notificaciones push, biometria) necesitas un Develoment Build que es un binario propio
 genrado con EAS Build. En proyectos reales siempre se usa Develoment Build.
 

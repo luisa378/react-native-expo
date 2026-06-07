@@ -15,7 +15,7 @@ El usuario principal es una persona que estudia, trabaja en proyectos o necesita
 - Validacion de formularios con mensajes de error claros.
 - Listas de alto rendimiento con FlashList.
 - Estado global con Zustand.
-- Persistencia local con AsyncStorage.
+- Persistencia en servidor mediante API REST y PostgreSQL.
 - Detalle de cada elemento y eliminacion con confirmacion.
 - Busqueda en tiempo real por seccion.
 - Tema claro y oscuro usando el color del sistema.

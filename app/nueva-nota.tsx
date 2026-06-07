@@ -50,7 +50,7 @@ export default function NewContentModal() {
         });
         return;
       }
-      addNote(result.data);
+      await addNote(result.data);
     }
 
     if (type === "checklist") {
@@ -62,7 +62,7 @@ export default function NewContentModal() {
         });
         return;
       }
-      addChecklist(result.data);
+      await addChecklist(result.data);
     }
 
     if (type === "idea") {
@@ -74,7 +74,7 @@ export default function NewContentModal() {
         });
         return;
       }
-      addIdea(result.data);
+      await addIdea(result.data);
     }
 
     await Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);

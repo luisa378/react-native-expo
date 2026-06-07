@@ -1,8 +1,6 @@
-import AsyncStorage from "@react-native-async-storage/async-storage";
 import { create } from "zustand";
-import { createJSONStorage, persist } from "zustand/middleware";
+import { createContent, deleteContentRequest, getNotes, updateChecklistItem } from "@/lib/api";
 import { AnyNote, ChecklistItem, ChecklistNote, ContentType, IdeaNote, Note } from "@/types";
-import { nowIso } from "@/utils/date";
 
 type NewNote = Pick<Note, "title" | "content">;
 type NewChecklist = Pick<ChecklistNote, "title"> & { items: string[] };
@@ -13,159 +11,100 @@ interface NotesState {
   checklists: ChecklistNote[];
   ideas: IdeaNote[];
   hasHydrated: boolean;
-  addNote: (input: NewNote) => void;
-  addChecklist: (input: NewChecklist) => void;
-  addIdea: (input: NewIdea) => void;
-  deleteContent: (type: ContentType, id: string) => void;
-  toggleChecklistItem: (checklistId: string, itemId: string) => void;
+  isLoading: boolean;
+  error: string | null;
+  fetchContent: () => Promise<void>;
+  addNote: (input: NewNote) => Promise<void>;
+  addChecklist: (input: NewChecklist) => Promise<void>;
+  addIdea: (input: NewIdea) => Promise<void>;
+  deleteContent: (type: ContentType, id: string) => Promise<void>;
+  toggleChecklistItem: (checklistId: string, itemId: string) => Promise<void>;
   findContent: (type: ContentType, id: string) => AnyNote | undefined;
   setHasHydrated: (value: boolean) => void;
 }
 
-const seedDate = "2026-05-29T09:00:00.000Z";
-
-const seedData = {
-  notes: [
-    {
-      id: "note-1",
-      type: "note" as const,
-      title: "Resumen de clase",
-      content: "Revisar arquitectura movil, Expo Router, Zustand y persistencia local.",
-      createdAt: seedDate,
-      updatedAt: seedDate
-    }
-  ],
-  checklists: [
-    {
-      id: "checklist-1",
-      type: "checklist" as const,
-      title: "Preparar entrega",
-      items: [
-        { id: "item-1", text: "Crear tabs principales", isCompleted: true },
-        { id: "item-2", text: "Validar formulario con Zod", isCompleted: false },
-        { id: "item-3", text: "Probar persistencia local", isCompleted: false }
-      ],
-      createdAt: seedDate,
-      updatedAt: seedDate
-    }
-  ],
-  ideas: [
-    {
-      id: "idea-1",
-      type: "idea" as const,
-      title: "Modo archivo",
-      tags: ["mejora", "ux", "futuro"],
-      color: "#FEF3C7",
-      createdAt: seedDate,
-      updatedAt: seedDate
-    }
-  ]
-};
-
-function createId(prefix: string) {
-  return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
+function splitContent(items: AnyNote[]) {
+  return {
+    notes: items.filter((item): item is Note => item.type === "note"),
+    checklists: items.filter((item): item is ChecklistNote => item.type === "checklist"),
+    ideas: items.filter((item): item is IdeaNote => item.type === "idea")
+  };
 }
 
-export const useNotesStore = create<NotesState>()(
-  persist(
-    (set, get) => ({
-      ...seedData,
-      hasHydrated: false,
-      setHasHydrated: (value) => set({ hasHydrated: value }),
-      addNote: (input) =>
-        set((state) => {
-          const date = nowIso();
-          return {
-            notes: [
-              {
-                id: createId("note"),
-                type: "note",
-                title: input.title.trim(),
-                content: input.content.trim(),
-                createdAt: date,
-                updatedAt: date
-              },
-              ...state.notes
-            ]
-          };
-        }),
-      addChecklist: (input) =>
-        set((state) => {
-          const date = nowIso();
-          const items: ChecklistItem[] = input.items.map((text) => ({
-            id: createId("item"),
-            text: text.trim(),
-            isCompleted: false
-          }));
-          return {
-            checklists: [
-              {
-                id: createId("checklist"),
-                type: "checklist",
-                title: input.title.trim(),
-                items,
-                createdAt: date,
-                updatedAt: date
-              },
-              ...state.checklists
-            ]
-          };
-        }),
-      addIdea: (input) =>
-        set((state) => {
-          const date = nowIso();
-          return {
-            ideas: [
-              {
-                id: createId("idea"),
-                type: "idea",
-                title: input.title.trim(),
-                tags: input.tags.map((tag) => tag.trim()).filter(Boolean),
-                color: input.color,
-                createdAt: date,
-                updatedAt: date
-              },
-              ...state.ideas
-            ]
-          };
-        }),
-      deleteContent: (type, id) =>
-        set((state) => ({
-          notes: type === "note" ? state.notes.filter((item) => item.id !== id) : state.notes,
-          checklists:
-            type === "checklist" ? state.checklists.filter((item) => item.id !== id) : state.checklists,
-          ideas: type === "idea" ? state.ideas.filter((item) => item.id !== id) : state.ideas
-        })),
-      toggleChecklistItem: (checklistId, itemId) =>
-        set((state) => ({
-          checklists: state.checklists.map((checklist) =>
-            checklist.id === checklistId
-              ? {
-                  ...checklist,
-                  updatedAt: nowIso(),
-                  items: checklist.items.map((item) =>
-                    item.id === itemId ? { ...item, isCompleted: !item.isCompleted } : item
-                  )
-                }
-              : checklist
-          )
-        })),
-      findContent: (type, id) => {
-        const state = get();
-        if (type === "note") return state.notes.find((item) => item.id === id);
-        if (type === "checklist") return state.checklists.find((item) => item.id === id);
-        return state.ideas.find((item) => item.id === id);
-      }
-    }),
-    {
-      name: "noteflow-storage",
-      storage: createJSONStorage(() => AsyncStorage),
-      partialize: (state) => ({
-        notes: state.notes,
-        checklists: state.checklists,
-        ideas: state.ideas
-      }),
-      onRehydrateStorage: () => (state) => state?.setHasHydrated(true)
+export const useNotesStore = create<NotesState>()((set, get) => ({
+  notes: [],
+  checklists: [],
+  ideas: [],
+  hasHydrated: false,
+  isLoading: false,
+  error: null,
+  setHasHydrated: (value) => set({ hasHydrated: value }),
+  fetchContent: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const items = await getNotes();
+      set({ ...splitContent(items), hasHydrated: true, isLoading: false });
+    } catch {
+      set({
+        error: "No se pudieron cargar los datos",
+        hasHydrated: true,
+        isLoading: false
+      });
     }
-  )
-);
+  },
+  addNote: async (input) => {
+    const created = await createContent({ type: "note", ...input });
+    if (created.type === "note") {
+      set((state) => ({ notes: [created, ...state.notes] }));
+    }
+  },
+  addChecklist: async (input) => {
+    const created = await createContent({ type: "checklist", ...input });
+    if (created.type === "checklist") {
+      set((state) => ({ checklists: [created, ...state.checklists] }));
+    }
+  },
+  addIdea: async (input) => {
+    const created = await createContent({ type: "idea", ...input });
+    if (created.type === "idea") {
+      set((state) => ({ ideas: [created, ...state.ideas] }));
+    }
+  },
+  deleteContent: async (type, id) => {
+    await deleteContentRequest(id);
+    set((state) => ({
+      notes: type === "note" ? state.notes.filter((item) => item.id !== id) : state.notes,
+      checklists:
+        type === "checklist" ? state.checklists.filter((item) => item.id !== id) : state.checklists,
+      ideas: type === "idea" ? state.ideas.filter((item) => item.id !== id) : state.ideas
+    }));
+  },
+  toggleChecklistItem: async (checklistId, itemId) => {
+    const checklist = get().checklists.find((item) => item.id === checklistId);
+    const item = checklist?.items.find((task) => task.id === itemId);
+
+    if (!item) return;
+
+    await updateChecklistItem(itemId, { isCompleted: !item.isCompleted });
+
+    set((state) => ({
+      checklists: state.checklists.map((current) =>
+        current.id === checklistId
+          ? {
+              ...current,
+              updatedAt: new Date().toISOString(),
+              items: current.items.map((task: ChecklistItem) =>
+                task.id === itemId ? { ...task, isCompleted: !task.isCompleted } : task
+              )
+            }
+          : current
+      )
+    }));
+  },
+  findContent: (type, id) => {
+    const state = get();
+    if (type === "note") return state.notes.find((item) => item.id === id);
+    if (type === "checklist") return state.checklists.find((item) => item.id === id);
+    return state.ideas.find((item) => item.id === id);
+  }
+}));

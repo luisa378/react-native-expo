@@ -37,7 +37,7 @@ export function DetailScreen({ type }: Props) {
         style: "destructive",
         onPress: async () => {
           await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          deleteContent(type, item.id);
+          await deleteContent(type, item.id);
           router.back();
         }
       }
@@ -45,7 +45,7 @@ export function DetailScreen({ type }: Props) {
   };
 
   const handleToggle = async (itemId: string) => {
-    toggleChecklistItem(item.id, itemId);
+    await toggleChecklistItem(item.id, itemId);
     if (isChecklist(item)) {
       const pendingAfterToggle = item.items.filter((task) =>
         task.id === itemId ? task.isCompleted : !task.isCompleted

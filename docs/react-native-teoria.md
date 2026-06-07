@@ -37,7 +37,7 @@ Las pestañas separan areas de trabajo frecuentes. El stack permite entrar al de
 
 Los tipos principales estan en `types/index.ts`: `Note`, `ChecklistNote`, `IdeaNote` y la union `AnyNote`. Cada tipo tiene un campo `type`, que actua como discriminante para aplicar type guards de forma segura.
 
-Las fechas se guardan como cadenas ISO. Es mas fiable para persistencia JSON con AsyncStorage y evita problemas al rehidratar objetos `Date`.
+Las fechas se guardan como cadenas ISO. Es mas fiable para transportar datos JSON entre la API y la app y evita problemas al reconstruir objetos `Date`.
 
 ## Gestion de estado
 
@@ -47,9 +47,9 @@ El store vive en `store/notesStore.ts` y contiene datos, acciones de creacion, e
 
 ## Persistencia
 
-AsyncStorage guarda el estado en el dispositivo mediante `persist` y `createJSONStorage`. Durante la rehidratacion, `hasHydrated` permite mostrar un estado de carga y evita que la interfaz asuma datos antes de leer el almacenamiento local.
+La API es ahora la fuente de verdad. Zustand mantiene una copia en memoria para pintar la interfaz, y `hasHydrated` permite mostrar un estado de carga mientras se obtienen los datos del servidor.
 
-AsyncStorage no cifra datos y no esta pensado para informacion sensible. NoteFlow lo usa para productividad personal de bajo riesgo.
+Los secretos no viven en la app movil. La conexion a PostgreSQL queda en el backend mediante `DATABASE_URL`.
 
 ## Rendimiento en listas
 
