@@ -51,9 +51,12 @@ export function testAPIConnection() {
 }
 
 // Exportar como global para acceso en consola
-if (typeof global !== 'undefined') {
-  (global as any).__debugAPI = {
-    config: debugAPIConfig,
-    test: testAPIConnection
+(globalThis as typeof globalThis & {
+  __debugAPI?: {
+    config: typeof debugAPIConfig;
+    test: typeof testAPIConnection;
   };
-}
+}).__debugAPI = {
+  config: debugAPIConfig,
+  test: testAPIConnection
+};

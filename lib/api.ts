@@ -1,6 +1,6 @@
 import { AnyNote, ChecklistItem } from "@/types";
 
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3001/api";
+const BASE_URL = (process.env.EXPO_PUBLIC_API_URL ?? "http://192.168.1.149:3000/api").trim();
 
 // Log para debugging
 console.log("[API] BASE_URL configurada:", BASE_URL);
@@ -50,6 +50,11 @@ async function request<T>(path: string, options?: RequestInit): Promise<T> {
       throw new Error(`Error HTTP ${res.status}: ${errorText || "Sin detalles"}`);
     }
 
+    if (res.status === 204) {
+      console.log(`[API] ${method} ${url} - Respuesta OK`);
+      return undefined as T;
+    }
+
     const data = await res.json() as T;
     console.log(`[API] ${method} ${url} - Respuesta OK`);
     return data;
@@ -71,16 +76,9 @@ export async function createContent(data: CreateContentInput): Promise<AnyNote> 
 }
 
 export async function deleteContentRequest(id: string): Promise<void> {
-  const res = await fetch(`${BASE_URL}/notes/${id}`, {
-    method: "DELETE",
-    headers: {
-      "Content-Type": "application/json"
-    }
+  await request<void>(`/notes/${id}`, {
+    method: "DELETE"
   });
-
-  if (!res.ok) {
-    throw new Error("Error al eliminar contenido");
-  }
 }
 
 export async function updateChecklistItem(itemId: string, data: Partial<ChecklistItem>): Promise<void> {

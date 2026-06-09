@@ -26,15 +26,6 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
-        name="checklists"
-        options={{
-          title: "Tareas",
-          tabBarIcon: ({ color, size }) => (
-            <MaterialCommunityIcons name="checkbox-marked-circle-outline" color={color} size={size} />
-          )
-        }}
-      />
-      <Tabs.Screen
         name="ideas"
         options={{
           title: "Ideas",
@@ -43,6 +34,19 @@ export default function TabsLayout() {
           )
         }}
       />
+      <Tabs.Screen
+        name="checklists"
+        options={{
+          title: "Tareas",
+          tabBarIcon: ({ color, size }) => (
+            <MaterialCommunityIcons name="checkbox-marked-circle-outline" color={color} size={size} />
+          )
+        }}
+      />
+      <Tabs.Screen name="index" options={{ href: null }} />
+      <Tabs.Screen name="notas/[id]" options={{ href: null }} />
+      <Tabs.Screen name="ideas/[id]" options={{ href: null }} />
+      <Tabs.Screen name="checklists/[id]" options={{ href: null }} />
     </Tabs>
   );
 }

@@ -1,4 +1,5 @@
-import { Alert, ScrollView, StyleSheet, View } from "react-native";
+import { useState } from "react";
+import { Alert, Platform, ScrollView, StyleSheet, View } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import * as Haptics from "expo-haptics";
 import { Button, Checkbox, Chip, Divider, Text, useTheme } from "react-native-paper";
@@ -14,6 +15,7 @@ interface Props {
 export function DetailScreen({ type }: Props) {
   const { id } = useLocalSearchParams<{ id: string }>();
   const theme = useTheme();
+  const [isDeleting, setIsDeleting] = useState(false);
   const item = useNotesStore((state) => state.findContent(type, id));
   const deleteContent = useNotesStore((state) => state.deleteContent);
   const toggleChecklistItem = useNotesStore((state) => state.toggleChecklistItem);
@@ -29,17 +31,35 @@ export function DetailScreen({ type }: Props) {
     );
   }
 
+  const confirmDelete = async () => {
+    if (isDeleting) return;
+
+    try {
+      setIsDeleting(true);
+      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      await deleteContent(type, item.id);
+      router.back();
+    } catch {
+      Alert.alert("No se pudo eliminar", "Intentalo de nuevo en unos segundos.");
+      setIsDeleting(false);
+    }
+  };
+
   const handleDelete = () => {
+    if (Platform.OS === "web") {
+      const shouldDelete = window.confirm("Esta accion no se puede deshacer.");
+      if (shouldDelete) {
+        void confirmDelete();
+      }
+      return;
+    }
+
     Alert.alert("Eliminar", "Esta accion no se puede deshacer.", [
       { text: "Cancelar", style: "cancel" },
       {
         text: "Eliminar",
         style: "destructive",
-        onPress: async () => {
-          await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-          await deleteContent(type, item.id);
-          router.back();
-        }
+        onPress: () => void confirmDelete()
       }
     ]);
   };
@@ -100,6 +120,8 @@ export function DetailScreen({ type }: Props) {
         mode="outlined"
         textColor={theme.colors.error}
         onPress={handleDelete}
+        loading={isDeleting}
+        disabled={isDeleting}
         style={styles.delete}
       >
         Eliminar
